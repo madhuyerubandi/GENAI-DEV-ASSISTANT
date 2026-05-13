@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MADHUDEV GPT</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family: Arial, sans-serif;
+
+            background:
+            linear-gradient(
+                135deg,
+                #0f172a,
+                #111827,
+                #1e1b4b
+            );
+
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            overflow:hidden;
+            position:relative;
+        }
+
+        /* Blue Glow */
+        body::before{
+            content:"";
+            position:absolute;
+            width:500px;
+            height:500px;
+            background:#2563eb;
+            border-radius:50%;
+            filter:blur(150px);
+            top:-100px;
+            left:-100px;
+            opacity:0.4;
+        }
+
+        /* Purple Glow */
+        body::after{
+            content:"";
+            position:absolute;
+            width:400px;
+            height:400px;
+            background:#7c3aed;
+            border-radius:50%;
+            filter:blur(150px);
+            bottom:-100px;
+            right:-100px;
+            opacity:0.4;
+        }
+
+        .chat-container{
+            width:700px;
+            height:85vh;
+
+            background:rgba(30,41,59,0.75);
+
+            backdrop-filter:blur(12px);
+
+            border:1px solid rgba(255,255,255,0.1);
+
+            border-radius:20px;
+            overflow:hidden;
+
+            display:flex;
+            flex-direction:column;
+
+            box-shadow:
+            0 8px 32px rgba(0,0,0,0.5);
+
+            position:relative;
+
+            z-index:10;
+        }
+
+        /* Robot Background Image */
+        .robot-bg{
+            position:absolute;
+
+            width:250px;
+
+            opacity:0.08;
+
+            right:20px;
+            bottom:20px;
+
+            pointer-events:none;
+        }
+
+        .header{
+            background:#111827;
+
+            padding:20px;
+
+            font-size:28px;
+
+            font-weight:bold;
+
+            text-align:center;
+
+            border-bottom:1px solid #334155;
+
+            color:#60a5fa;
+
+            letter-spacing:1px;
+
+            text-shadow:0 0 15px rgba(96,165,250,0.6);
+        }
+
+        .chat-box{
+            flex:1;
+
+            padding:20px;
+
+            overflow-y:auto;
+
+            display:flex;
+
+            flex-direction:column;
+
+            gap:15px;
+
+            z-index:2;
+        }
+
+        .message{
+            padding:15px;
+
+            border-radius:15px;
+
+            max-width:80%;
+
+            line-height:1.5;
+
+            animation:fadeIn 0.3s ease;
+        }
+
+        .user{
+            background:#2563eb;
+
+            align-self:flex-end;
+        }
+
+        .bot{
+            background:#334155;
+
+            align-self:flex-start;
+        }
+
+        .input-area{
+            display:flex;
+
+            padding:20px;
+
+            background:#111827;
+
+            border-top:1px solid #334155;
+
+            z-index:2;
+        }
+
+        .input-area input{
+            flex:1;
+
+            padding:15px;
+
+            border:none;
+
+            border-radius:12px;
+
+            outline:none;
+
+            font-size:16px;
+
+            background:#1e293b;
+
+            color:white;
+        }
+
+        .input-area button{
+            margin-left:10px;
+
+            padding:15px 25px;
+
+            border:none;
+
+            border-radius:12px;
+
+            background:#2563eb;
+
+            color:white;
+
+            font-size:16px;
+
+            cursor:pointer;
+
+            transition:0.3s;
+        }
+
+        .input-area button:hover{
+            background:#1d4ed8;
+
+            transform:scale(1.05);
+        }
+
+        .loading{
+            opacity:0.7;
+
+            font-style:italic;
+        }
+
+        @keyframes fadeIn{
+            from{
+                opacity:0;
+                transform:translateY(10px);
+            }
+
+            to{
+                opacity:1;
+                transform:translateY(0);
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="chat-container">
+
+    <!-- ADD YOUR IMAGE HERE -->
+    <img 
+        src="robot.png"
+        class="robot-bg"
+    >
+
+    <div class="header">
+        🤖 MADHUDEV GPT
+    </div>
+
+    <div class="chat-box" id="chatBox">
+
+        <div class="message bot">
+            Hello 👋 <br>
+            How can I help you today?
+        </div>
+
+    </div>
+
+    <div class="input-area">
+
+        <input 
+            type="text"
+            id="message"
+            placeholder="Ask anything..."
+            onkeydown="handleEnter(event)"
+        >
+
+        <button onclick="sendMessage()">
+            Send
+        </button>
+
+    </div>
+
+</div>
+
+<script>
+
+async function sendMessage(){
+
+    let input=document.getElementById("message");
+
+    let msg=input.value.trim();
+
+    if(msg===""){
+        return;
+    }
+
+    let chatBox=document.getElementById("chatBox");
+
+    // User Message
+    let userDiv=document.createElement("div");
+
+    userDiv.className="message user";
+
+    userDiv.innerText=msg;
+
+    chatBox.appendChild(userDiv);
+
+    // Loading Message
+    let loadingDiv=document.createElement("div");
+
+    loadingDiv.className="message bot loading";
+
+    loadingDiv.innerText="Thinking...";
+
+    chatBox.appendChild(loadingDiv);
+
+    chatBox.scrollTop=chatBox.scrollHeight;
+
+    input.value="";
+
+    try{
+
+        let response=await fetch(
+            "http://localhost:8080/chat?message="
+            + encodeURIComponent(msg)
+        );
+
+        let data=await response.text();
+
+        loadingDiv.innerText=data;
+
+        loadingDiv.classList.remove("loading");
+    }
+    catch(error){
+
+        loadingDiv.innerText=
+        "Error connecting to AI server.";
+    }
+
+    chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+function handleEnter(event){
+
+    if(event.key==="Enter"){
+        sendMessage();
+    }
+}
+
+</script>
+
+</body>
+</html>
